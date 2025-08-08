@@ -1,6 +1,44 @@
+import type { Metadata } from "next"
+import dynamic from "next/dynamic"
 import Image from "next/image";
+import { baseUrl } from "@/constants"
 
-export default function Home() {
+const TestComponent = dynamic(() => import("@/ui/test-component").then((mod) => mod.TestComponent))
+
+const getMeta = async () => new Promise<{ title: string; description: string }>((resolve) => {
+  setTimeout(() => {
+    resolve({
+      title: "My Test Title",
+      description: "My Test Description",
+    })
+  }, 500)
+})
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await getMeta()
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{
+        url: '/og.jpeg',
+        width: 225,
+        height: 225,
+        type: 'image/jpeg',
+        alt: 'Test',
+      }],
+    },
+  }
+}
+
+export default async function MainPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
+  const { title, description } = await getMeta()
+
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -22,6 +60,15 @@ export default function Home() {
           </li>
           <li className="tracking-[-.01em]">
             Save and see your changes instantly.
+          </li>
+          <li>
+            [{lang}] {title}
+          </li>
+          <li>
+            {description}
+          </li>
+          <li>
+            <TestComponent />
           </li>
         </ol>
 
